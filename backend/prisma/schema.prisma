@@ -1,13 +1,113 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed password
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  birthCharts   BirthChart[]
+  savedReadings SavedReading[]
+
+  @@map("users")
+}
+
+// Birth Chart (Kundali) model
+model BirthChart {
+  id          String   @id @default(uuid())
+  userId      String?
+  name        String   // Name of the person
+  dateOfBirth DateTime @db.Date
+  timeOfBirth DateTime @db.Time
+  latitude    Float
+  longitude   Float
+  timezone    String   // e.g., "Asia/Kolkata"
+  placeName   String?  // Human-readable location
+  
+  // Calculated data (stored as JSON for flexibility)
+  planetPositions Json?  // { sun: { sign: "aries", degree: 15.5, ... }, ... }
+  ascendant       Json?  // { sign: "libra", degree: 23.5, ... }
+  houses          Json?  // Array of 12 houses
+  nakshatra       Json?  // { name: "chitra", pada: 2, ... }
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedReadings SavedReading[]
+
+  @@map("birth_charts")
+}
+
+// Saved Readings/Predictions
+model SavedReading {
+  id           String @id @default(uuid())
+  userId       String
+  birthChartId String
+  
+  readingType String // e.g., "general", "career", "marriage", "health"
+  content     String @db.Text
+  
+  createdAt DateTime @default(now())
+
+  // Relations
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  birthChart BirthChart @relation(fields: [birthChartId], references: [id], onDelete: Cascade)
+
+  @@map("saved_readings")
+}
+
+// Horoscope Cache (for daily/weekly horoscopes)
+model HoroscopeCache {
+  id        String   @id @default(uuid())
+  rashi     String   // Aries, Taurus, etc.
+  period    String   // daily, weekly, monthly, yearly
+  date      DateTime @db.Date
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@unique([rashi, period, date])
+  @@map("horoscope_cache")
+}
+
+// Panchang Cache (for daily panchang data)
+model PanchangCache {
+  id        String   @id @default(uuid())
+  date      DateTime @db.Date
+  latitude  Float
+  longitude Float
+  
+  // Panchang elements
+  tithi     Json // { number: 5, name: "panchami", paksha: "shukla" }
+  nakshatra Json // { name: "rohini", start: "...", end: "..." }
+  yoga      Json // { name: "siddhi", ... }
+  karana    Json // { name: "bava", ... }
+  
+  sunrise   DateTime?
+  sunset    DateTime?
+  
+  // Auspicious times
+  rahuKaal  Json? // { start: "...", end: "..." }
+  yamaganda Json?
+  gulika    Json?
+  
+  createdAt DateTime @default(now())
+
+  @@unique([date, latitude, longitude])
+  @@map("panchang_cache")
 }
