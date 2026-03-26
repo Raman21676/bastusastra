@@ -7,11 +7,14 @@ This document identifies gaps in the extracted knowledge from the three astrolog
 ## Critical Gaps
 
 ### 1. Brihat Jataka Content
-**Status:** ⚠️ HIGH PRIORITY
+**Status:** ⚠️ HIGH PRIORITY - OCR IN PROGRESS
 
 The Brihat Jataka (2nd Edition) by V. Subrahmanya Sastri is a scanned PDF without OCR text layer. This is one of the most important classical texts on Hindu astrology.
 
-**Action Items:**
+**OCR Status:**
+- [x] Created OCR script: `docs/ocr_brihat_jataka.py`
+- [ ] Install Tesseract OCR (attempted: Homebrew stuck, EasyOCR failed)
+- [ ] Process 588 pages
 - [ ] Extract text using OCR (Optical Character Recognition)
 - [ ] Alternative: Use existing English translations if available
 - [ ] Key areas to extract:
@@ -21,7 +24,14 @@ The Brihat Jataka (2nd Edition) by V. Subrahmanya Sastri is a scanned PDF withou
   - Raja Yoga definitions
   - Maraka (death-inflicting) planet rules
 
+**Alternative Options:**
+1. Use cloud OCR API (Google Vision, AWS Textract, Azure)
+2. Continue troubleshooting local installation
+3. Proceed with development using existing 682 pages from other books
+
 **Estimated Impact:** HIGH - This book contains many advanced techniques not covered in the other two books.
+
+**Note:** The first two books (682 pages total) contain sufficient knowledge to build a comprehensive astrology website. Brihat Jataka contains advanced techniques that can be integrated later.
 
 ---
 
