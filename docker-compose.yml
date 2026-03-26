@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bastusastra-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bastusastra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bastusastra123}
+      POSTGRES_DB: ${POSTGRES_DB:-bastusastra}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bastusastra} -d ${POSTGRES_DB:-bastusastra}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: bastusastra-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Optional - for development)
+  # Uncomment to run backend in Docker
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: bastusastra-backend
+  #   restart: unless-stopped
+  #   environment:
+  #     DATABASE_URL: postgresql://${POSTGRES_USER:-bastusastra}:${POSTGRES_PASSWORD:-bastusastra123}@postgres:5432/${POSTGRES_DB:-bastusastra}
+  #     REDIS_URL: redis://redis:6379
+  #     PORT: 3001
+  #     NODE_ENV: development
+  #     JWT_SECRET: ${JWT_SECRET}
+  #   ports:
+  #     - "3001:3001"
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
